@@ -97,7 +97,7 @@ def hello():
 
 # SignUp
 @app.route('/signup', methods=['POST'])
-def signUpCgpsc():
+def signUp():
     firstname = request.json['firstname']
     lastname = request.json['lastname']
     email = request.json['email']
@@ -131,7 +131,7 @@ def signUpCgpsc():
 
 # User Login
 @app.route('/login', methods=["POST"])
-def userLoginCgpsc():
+def userLogin():
     email = request.json["email"]
     password = request.json["password"]
     isUserExist = False
@@ -162,7 +162,7 @@ def userLoginCgpsc():
 
 # User Forget Password
 @app.route('/forgetPassword', methods=["POST"])
-def forgetPasswordCgpsc():
+def forgetPassword():
     email = request.json["email"]
     mobile = request.json["mobile"]
     isUserExist = False
@@ -184,7 +184,7 @@ def forgetPasswordCgpsc():
 
 # User Change Password
 @app.route('/changePassword', methods=["PUT"])
-def changePasswordCgpsc():
+def changePassword():
     user_id = request.json["user_id"]
     password = request.json["password"]
     password_salt = generate_salt()
@@ -199,7 +199,7 @@ def changePasswordCgpsc():
 
 # Razorpay Create Order
 @app.route('/createOrder', methods=['POST'])
-def create_app():
+def createOrder():
     module_package_id = request.json["module_package_id"]
     user_id = request.json["user_id"]
     initiate_at = datetime.fromtimestamp(calendar.timegm(time.gmtime()))
@@ -220,7 +220,7 @@ def create_app():
 
 # Razorpay Verify Signature
 @app.route('/verifyRazorpaySucces', methods=['POST'])
-def verify_payment():
+def verifyPayment():
     user_id = request.json["user_id"]
     module_package_id=request.json["module_package_id"]
     request_order_id = request.json["order_id"]
