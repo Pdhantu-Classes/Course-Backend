@@ -291,7 +291,7 @@ def uploadImage():
 
 # Change Profile Details 
 @app.route('/userDetails/<int:user_id>', methods=["PUT"])
-def pstUserDetails(user_id):
+def postUserDetails(user_id):
     whatsapp = request.json["whatsapp"]
     graduation_year = request.json["graduation_year"]
     course = request.json["course"]
