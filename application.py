@@ -25,12 +25,12 @@ ACCESS_SECRET_KEY = 'ad0OInOORJYA1qpbCHyoJjzJ/6GDFjGCHF5UUnwd'
 BUCKET_NAME = 'pdhantu-classes'
 
 # Test Razor Pay Credential
-# RAZORPAY_KEY = 'rzp_test_2QHPO79ACxzRQl'
-# RAZORPAY_SECRET = 'f9zvGhJn1MNBT070EUIh9e5o'
+RAZORPAY_KEY = 'rzp_test_2QHPO79ACxzRQl'
+RAZORPAY_SECRET = 'f9zvGhJn1MNBT070EUIh9e5o'
 
 # Live  Razor Pay Credential
-RAZORPAY_KEY = 'rzp_live_DjZ6EChEMzly9v'
-RAZORPAY_SECRET = 'CfgHyNIXwyyDF1KL9KbrnSW4'
+# RAZORPAY_KEY = 'rzp_live_DjZ6EChEMzly9v'
+# RAZORPAY_SECRET = 'CfgHyNIXwyyDF1KL9KbrnSW4'
 
 
 # Database Credential Development
@@ -200,11 +200,11 @@ def changePassword():
 # Razorpay Create Order
 @app.route('/createOrder', methods=['POST'])
 def createOrder():
-    module_package_id = request.json["module_package_id"]
+    package_id = request.json["package_id"]
     user_id = request.json["user_id"]
     initiate_at = datetime.fromtimestamp(calendar.timegm(time.gmtime()))
     cursor = mysql.connection.cursor()
-    cursor.execute("""SELECT package_price FROM course_package where module_package_id=(%s)""", [module_package_id])
+    cursor.execute("""SELECT package_price FROM course_package where module_package_id=(%s)""", [package_id])
     result = cursor.fetchone()
     paye_id = randomString(10)
     order_amount = int(result["package_price"]) * 100
@@ -222,7 +222,7 @@ def createOrder():
 @app.route('/verifyRazorpaySucces', methods=['POST'])
 def verifyPayment():
     user_id = request.json["user_id"]
-    module_package_id=request.json["module_package_id"]
+    package_id=request.json["package_id"]
     request_order_id = request.json["order_id"]
     request_payment_id = request.json["payment_id"]
     request_signature = request.json["signature"]
@@ -234,7 +234,7 @@ def verifyPayment():
         is_success=True
         status='success'
     cursor = mysql.connection.cursor()
-    cursor.execute("""SELECT package_price FROM module_package where module_package_id=(%s)""", [module_package_id])
+    cursor.execute("""SELECT package_price FROM module_package where package_id=(%s)""", [package_id])
     result = cursor.fetchone()
     cursor.execute("""UPDATE course_order_initiate SET status = (%s) where user_id =(%s) and module_package_id=(%s)""",[status,user_id,module_package_id])
     cursor.execute("""INSERT into course_order_history(payment_id,order_id,user_id,price,order_at,status) values(%s,%s,%s,%s,%s,%s)""", [request_payment_id,request_order_id,user_id,result["package_price"],order_at,status])
