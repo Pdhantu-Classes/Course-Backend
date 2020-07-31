@@ -243,6 +243,74 @@ def verifyPayment():
     return json.dumps({"isSuccess": is_success})
 
 
+# Check User Registered
+@app.route('/isUserRegister/<int:user_id>', methods=["GET"])
+def isUserRegister(user_id):
+    cursor = mysql.connection.cursor()
+    isValid = False
+    cursor.execute("""SELECT course FROM course_users where id=(%s)""", [user_id])
+    result = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    if result["course"]:
+        isValid = True
+    response =app.response_class(response=json.dumps({"message":"User details exist", "isValid":isValid, "package_id":result["course"]}),status= 200, mimetype='application/json')
+    return response
+
+# Get Profile Details
+@app.route('/userDetails/<int:user_id>', methods=["GET"])
+def getUserDetails(user_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("""SELECT cu.*, cp.package_name as courses  FROM course_users cu left join course_package cp on cu.course = cp.id where cu.id=(%s)""", [user_id])
+    result = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"User details exist","user_data":result}),status= 200, mimetype='application/json')
+    return response
+
+
+# Upload Profile Image
+@app.route('/upload-image', methods=["POST"])
+def uploadImage():
+    isUpload = False
+    response = {}
+    user_id = request.headers.get("user_id")
+    file = request.files["file"]
+    seconds = str(time.time()).replace(".","")
+    newFile = "user-images/"+seconds + "-" + file.filename
+    uploadFileToS3(newFile, file)
+    image_url = 'https://pdhantu-classes.s3.us-east-2.amazonaws.com/'+newFile
+    cursor = mysql.connection.cursor()
+    cursor.execute("""UPDATE course_users SET image_url =(%s) where id=(%s)""", [image_url,user_id])
+    mysql.connection.commit()
+    cursor.close()
+    isUpload = True
+    response["isUpload"] = isUpload
+    response["imageUrl"] = image_url
+    return json.dumps(response)
+
+# Change Profile Details 
+@app.route('/userDetails/<int:user_id>', methods=["PUT"])
+def pstUserDetails(user_id):
+    whatsapp = request.json["whatsapp"]
+    graduation_year = request.json["graduation_year"]
+    course = request.json["course"]
+    gender = request.json["gender"]
+    dob = request.json["dob"]
+    address = request.json["address"]
+    pincode = request.json["pincode"]
+    qualification = request.json["qualification"]
+    occuapation = request.json["occuapation"]
+    fathers_name = request.json["fathers_name"]
+    medium = request.json["medium"]
+    
+    cursor = mysql.connection.cursor()
+    cursor.execute("""UPDATE course_users SET whatsapp =(%s), graduation_year=(%s), course=(%s), gender=(%s), dob=(%s), address=(%s), pincode=(%s), qualification=(%s), occuapation=(%s), fathers_name=(%s), medium=(%s)  where id=(%s)""", [whatsapp, graduation_year, course, gender, dob, address, pincode, qualification, occuapation, fathers_name, medium, user_id])
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"User Data Added Successfully"}),status= 200, mimetype='application/json')
+    return response
+
 if __name__ == "__main__":
     app.run(debug="True", host="0.0.0.0", port=5001)
     # app.run(debug = "True")
