@@ -300,12 +300,12 @@ def postUserDetails(user_id):
     address = request.json["address"]
     pincode = request.json["pincode"]
     qualification = request.json["qualification"]
-    occuapation = request.json["occuapation"]
+    occupation = request.json["occupation"]
     fathers_name = request.json["fathers_name"]
     medium = request.json["medium"]
     
     cursor = mysql.connection.cursor()
-    cursor.execute("""UPDATE course_users SET whatsapp =(%s), graduation_year=(%s), course=(%s), gender=(%s), dob=(%s), address=(%s), pincode=(%s), qualification=(%s), occuapation=(%s), fathers_name=(%s), medium=(%s)  where id=(%s)""", [whatsapp, graduation_year, course, gender, dob, address, pincode, qualification, occuapation, fathers_name, medium, user_id])
+    cursor.execute("""UPDATE course_users SET whatsapp =(%s), graduation_year=(%s), course=(%s), gender=(%s), dob=(%s), address=(%s), pincode=(%s), qualification=(%s), occupation=(%s), fathers_name=(%s), medium=(%s)  where id=(%s)""", [whatsapp, graduation_year, course, gender, dob, address, pincode, qualification, occupation, fathers_name, medium, user_id])
     mysql.connection.commit()
     cursor.close()
     response =app.response_class(response=json.dumps({"message":"User Data Added Successfully"}),status= 200, mimetype='application/json')
