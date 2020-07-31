@@ -210,7 +210,7 @@ def createOrder():
     order_amount = int(result["package_price"]) * 100
     order_currency = 'INR'
     order_receipt = 'order_'+paye_id
-    cursor.execute("""INSERT into course_order_initiate(order_id, user_id, package_id, price, initiate_at) values(%s,%s,%s,%s,%s)""", [order_receipt, user_id ,package_id, order_amount, initiate_at])
+    cursor.execute("""INSERT into course_order_initiate(order_id, user_id, package_id, price, initiate_at) values(%s,%s,%s,%s,%s)""", [order_receipt, user_id ,package_id, order_amount/100, initiate_at])
     razorId = razorpay_client.order.create(
         amount=order_amount, currency=order_currency, receipt=order_receipt, payment_capture='1')
     mysql.connection.commit()
