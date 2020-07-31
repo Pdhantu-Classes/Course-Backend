@@ -311,6 +311,35 @@ def postUserDetails(user_id):
     response =app.response_class(response=json.dumps({"message":"User Data Added Successfully"}),status= 200, mimetype='application/json')
     return response
 
+
+# Get All Test Series bought by User
+@app.route('/myOrders/<int:user_id>',methods=["GET"])
+def myOrders(user_id):
+    isValid = False
+    cursor = mysql.connection.cursor()
+    cursor.execute("""SELECT coh.*, cp.package_name FROM course_order_history coh left join course_package cp on coh.package_id= cp.id where coh.user_id =(%s) AND coh.status ="success" limit 1""", [user_id])
+    result = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    if result:
+        isValid = True
+    response =app.response_class(response=json.dumps({"isValid":isValid,"orders":result}),status= 200, mimetype='application/json')
+    return response
+
+# Check Package Buy or NOT
+@app.route('/isPackageBuy/<int:user_id>',methods=["GET"])
+def checkOrderDetails(user_id):
+    isValid = False
+    cursor = mysql.connection.cursor()
+    cursor.execute("""SELECT id FROM course_order_history where user_id =(%s) AND status ="success" limit 1""", [user_id])
+    result = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    if result:
+        isValid = True
+    response =app.response_class(response=json.dumps({"isValid":isValid}),status= 200, mimetype='application/json')
+    return response
+
 if __name__ == "__main__":
     app.run(debug="True", host="0.0.0.0", port=5001)
     # app.run(debug = "True")
