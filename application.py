@@ -210,7 +210,7 @@ def createOrder():
     order_amount = int(result["package_price"]) * 100
     order_currency = 'INR'
     order_receipt = 'order_'+paye_id
-    cursor.execute("""INSERT into course_order_initiate(order_id, user_id, package_id, price, initiate_at) values(%s,%s,%s,%s,%s)""", [order_receipt, user_id ,package_id, order_amount/100, initiate_at])
+    cursor.execute("""INSERT into course_order_initiates(order_id, user_id, package_id, price, initiate_at) values(%s,%s,%s,%s,%s)""", [order_receipt, user_id ,package_id, order_amount/100, initiate_at])
     razorId = razorpay_client.order.create(
         amount=order_amount, currency=order_currency, receipt=order_receipt, payment_capture='1')
     mysql.connection.commit()
@@ -236,7 +236,7 @@ def verifyPayment():
     cursor = mysql.connection.cursor()
     cursor.execute("""SELECT package_price FROM course_package where id=(%s)""", [package_id])
     result = cursor.fetchone()
-    cursor.execute("""UPDATE course_order_initiate SET status = (%s) where user_id =(%s) and package_id=(%s)""",[status,user_id,package_id])
+    cursor.execute("""UPDATE course_order_initiates SET status = (%s) where user_id =(%s) and package_id=(%s)""",[status,user_id,package_id])
     cursor.execute("""INSERT into course_order_history(payment_id,order_id,user_id,price,order_at,status,package_id) values(%s,%s,%s,%s,%s,%s,%s)""", [request_payment_id,request_order_id,user_id,result["package_price"],order_at,status,package_id])
     mysql.connection.commit()
     cursor.close()
