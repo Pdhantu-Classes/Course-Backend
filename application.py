@@ -25,20 +25,20 @@ ACCESS_SECRET_KEY = 'ad0OInOORJYA1qpbCHyoJjzJ/6GDFjGCHF5UUnwd'
 BUCKET_NAME = 'pdhantu-classes'
 
 # Test Razor Pay Credential
-RAZORPAY_KEY = 'rzp_test_x8I5D7s72Z0kOk'
-RAZORPAY_SECRET = 'IsPwjbGZx9vojbrA95vVoXzd'
+# RAZORPAY_KEY = 'rzp_test_x8I5D7s72Z0kOk'
+# RAZORPAY_SECRET = 'IsPwjbGZx9vojbrA95vVoXzd'
 
 # Live  Razor Pay Credential
-# RAZORPAY_KEY = 'rzp_live_dG54e74x2QdKcw'
-# RAZORPAY_SECRET = 'YqklWxoyHIc1s9boGOL94Z4B'
+RAZORPAY_KEY = 'rzp_live_dG54e74x2QdKcw'
+RAZORPAY_SECRET = 'YqklWxoyHIc1s9boGOL94Z4B'
 
 
 # Database Credential Development
 MYSQL_HOST = 'database-pdhantu.cqa6f6gkxqbj.us-east-2.rds.amazonaws.com'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = 'root_123'
-MYSQL_DB = 'pdhantu-dev'
-# MYSQL_DB = 'pdhantu-prod'
+# MYSQL_DB = 'pdhantu-dev'
+MYSQL_DB = 'pdhantu-prod'
 MYSQL_CURSORCLASS = 'DictCursor'
 
 
@@ -91,12 +91,12 @@ def randomString(stringLength=8):
 
 
 # Test
-@app.route('/', methods=["GET"])
+@app.route('/course', methods=["GET"])
 def hello():
     return "Hello World"
 
 # SignUp
-@app.route('/signup', methods=['POST'])
+@app.route('/course/signup', methods=['POST'])
 def signUp():
     firstname = request.json['firstname']
     lastname = request.json['lastname']
@@ -130,7 +130,7 @@ def signUp():
         return response
 
 # User Login
-@app.route('/login', methods=["POST"])
+@app.route('/course/login', methods=["POST"])
 def userLogin():
     email = request.json["email"]
     password = request.json["password"]
@@ -161,7 +161,7 @@ def userLogin():
 
 
 # User Forget Password
-@app.route('/forgetPassword', methods=["POST"])
+@app.route('/course/forgetPassword', methods=["POST"])
 def forgetPassword():
     email = request.json["email"]
     mobile = request.json["mobile"]
@@ -183,7 +183,7 @@ def forgetPassword():
         return response
 
 # User Change Password
-@app.route('/changePassword', methods=["PUT"])
+@app.route('/course/changePassword', methods=["PUT"])
 def changePassword():
     user_id = request.json["user_id"]
     password = request.json["password"]
@@ -198,7 +198,7 @@ def changePassword():
 
 
 # Razorpay Create Order
-@app.route('/createOrder', methods=['POST'])
+@app.route('/course/createOrder', methods=['POST'])
 def createOrder():
     package_id = request.json["package_id"]
     user_id = request.json["user_id"]
@@ -219,7 +219,7 @@ def createOrder():
 
 
 # Razorpay Verify Signature
-@app.route('/verifyRazorpaySucces', methods=['POST'])
+@app.route('/course/verifyRazorpaySucces', methods=['POST'])
 def verifyPayment():
     user_id = request.json["user_id"]
     package_id=request.json["package_id"]
@@ -244,7 +244,7 @@ def verifyPayment():
 
 
 # Check User Registered
-@app.route('/isUserRegister/<int:user_id>', methods=["GET"])
+@app.route('/course/isUserRegister/<int:user_id>', methods=["GET"])
 def isUserRegister(user_id):
     cursor = mysql.connection.cursor()
     isValid = False
@@ -270,7 +270,7 @@ def getUserDetails(user_id):
 
 
 # Upload Profile Image
-@app.route('/upload-image', methods=["POST"])
+@app.route('/course/upload-image', methods=["POST"])
 def uploadImage():
     isUpload = False
     response = {}
@@ -285,7 +285,7 @@ def uploadImage():
     return json.dumps(response)
 
 # Change Profile Details 
-@app.route('/userDetails/<int:user_id>', methods=["PUT"])
+@app.route('/course/userDetails/<int:user_id>', methods=["PUT"])
 def postUserDetails(user_id):
     whatsapp = request.json["whatsapp"]
     graduation_year = request.json["graduation_year"]
@@ -308,7 +308,7 @@ def postUserDetails(user_id):
 
 
 # Get All Test Series bought by User
-@app.route('/myOrders/<int:user_id>',methods=["GET"])
+@app.route('/course/myOrders/<int:user_id>',methods=["GET"])
 def myOrders(user_id):
     isValid = False
     cursor = mysql.connection.cursor()
@@ -322,7 +322,7 @@ def myOrders(user_id):
     return response
 
 # Check Package Buy or NOT
-@app.route('/isPackageBuy/<int:user_id>',methods=["GET"])
+@app.route('/course/isPackageBuy/<int:user_id>',methods=["GET"])
 def checkOrderDetails(user_id):
     isValid = False
     cursor = mysql.connection.cursor()
@@ -338,7 +338,7 @@ def checkOrderDetails(user_id):
 ##### Admin End #####
 
 # Admin Login
-@app.route('/adminLogin', methods=["POST"])
+@app.route('/course/adminLogin', methods=["POST"])
 def adminLogin():
     username = request.json["username"]
     password = request.json["password"]
@@ -357,7 +357,7 @@ def adminLogin():
         return response
 
 #Admin Dashboard
-@app.route('/adminDashboard',methods=["GET"])
+@app.route('/course/adminDashboard',methods=["GET"])
 def adminDashboard():
     cursor = mysql.connection.cursor()
     cursor.execute(""" select count(*) as total from course_users""")
@@ -374,7 +374,7 @@ def adminDashboard():
     return response
 
 #All Users
-@app.route('/allUsers',methods=["GET"])
+@app.route('/course/allUsers',methods=["GET"])
 def getAllUsers():
     page = request.headers.get("page")
     offset = 20*(int(page)-1)
@@ -390,7 +390,7 @@ def getAllUsers():
 
 
 #Paid Users
-@app.route('/paidUsers',methods=["GET"])
+@app.route('/course/paidUsers',methods=["GET"])
 def getPaidUsers():
     page = request.headers.get("page")
     offset = 20*(int(page)-1)
@@ -405,7 +405,7 @@ def getPaidUsers():
     return response
 
 #Unpaid Users
-@app.route('/unpaidUsers',methods=["GET"])
+@app.route('/course/unpaidUsers',methods=["GET"])
 def getUnpaidUsers():
     page = request.headers.get("page")
     offset = 20*(int(page)-1)
@@ -420,7 +420,7 @@ def getUnpaidUsers():
     return response
 
 #Disputed Users
-@app.route('/disputeOrders',methods=["GET"])
+@app.route('/course/disputeOrders',methods=["GET"])
 def disputeOrders():
     cursor = mysql.connection.cursor()
     cursor.execute(""" select cu.firstname, cu.lastname, cu.email, coi.user_id, coi.id, coi.order_id, coi.package_id, coi.price, coi.initiate_at from course_order_initiates coi left join course_users cu on coi.user_id = cu.id where status is null order by coi.id desc""")
@@ -431,7 +431,7 @@ def disputeOrders():
     return response
 
 # Resolve Orders
-@app.route('/resolveOrder',methods=["POST"])
+@app.route('/course/resolveOrder',methods=["POST"])
 def resolveOrder():
     payment_id = request.json["payment_id"]
     initiate_id = request.json["initiate_id"]
@@ -446,7 +446,7 @@ def resolveOrder():
     return response
 
 # Delete Orders
-@app.route('/deleteDisputeOrder',methods=["DELETE"])
+@app.route('/course/deleteDisputeOrder',methods=["DELETE"])
 def deleteDisputeOrder():
     initiate_id = request.json["initiate_id"]
     cursor = mysql.connection.cursor()
