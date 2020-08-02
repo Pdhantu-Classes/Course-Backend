@@ -445,7 +445,7 @@ def resolveOrder():
     response =app.response_class(response=json.dumps({"message":"Successfully Resolved", "isValid":True}),status= 200, mimetype='application/json')
     return response
 
-# Resolve Orders
+# Delete Orders
 @app.route('/deleteDisputeOrder',methods=["DELETE"])
 def deleteDisputeOrder():
     initiate_id = request.json["initiate_id"]
