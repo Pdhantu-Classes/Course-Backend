@@ -25,20 +25,20 @@ ACCESS_SECRET_KEY = 'ad0OInOORJYA1qpbCHyoJjzJ/6GDFjGCHF5UUnwd'
 BUCKET_NAME = 'pdhantu-classes'
 
 # Test Razor Pay Credential
-# RAZORPAY_KEY = 'rzp_test_x8I5D7s72Z0kOk'
-# RAZORPAY_SECRET = 'IsPwjbGZx9vojbrA95vVoXzd'
+RAZORPAY_KEY = 'rzp_test_x8I5D7s72Z0kOk'
+RAZORPAY_SECRET = 'IsPwjbGZx9vojbrA95vVoXzd'
 
 # Live  Razor Pay Credential
-RAZORPAY_KEY = 'rzp_live_dG54e74x2QdKcw'
-RAZORPAY_SECRET = 'YqklWxoyHIc1s9boGOL94Z4B'
+# RAZORPAY_KEY = 'rzp_live_dG54e74x2QdKcw'
+# RAZORPAY_SECRET = 'YqklWxoyHIc1s9boGOL94Z4B'
 
 
 # Database Credential Development
 MYSQL_HOST = 'database-pdhantu.cqa6f6gkxqbj.us-east-2.rds.amazonaws.com'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = 'root_123'
-# MYSQL_DB = 'pdhantu-dev'
-MYSQL_DB = 'pdhantu-prod'
+MYSQL_DB = 'pdhantu-dev'
+# MYSQL_DB = 'pdhantu-prod'
 MYSQL_CURSORCLASS = 'DictCursor'
 
 
@@ -274,16 +274,11 @@ def getUserDetails(user_id):
 def uploadImage():
     isUpload = False
     response = {}
-    user_id = request.headers.get("user_id")
     file = request.files["file"]
     seconds = str(time.time()).replace(".","")
     newFile = "user-images/"+seconds + "-" + file.filename
     uploadFileToS3(newFile, file)
     image_url = 'https://pdhantu-classes.s3.us-east-2.amazonaws.com/'+newFile
-    cursor = mysql.connection.cursor()
-    cursor.execute("""UPDATE course_users SET image_url =(%s) where id=(%s)""", [image_url,user_id])
-    mysql.connection.commit()
-    cursor.close()
     isUpload = True
     response["isUpload"] = isUpload
     response["imageUrl"] = image_url
@@ -303,9 +298,9 @@ def postUserDetails(user_id):
     occupation = request.json["occupation"]
     fathers_name = request.json["fathers_name"]
     medium = request.json["medium"]
-    
+    imageUrl = request.json["imageUrl"]
     cursor = mysql.connection.cursor()
-    cursor.execute("""UPDATE course_users SET whatsapp =(%s), graduation_year=(%s), course=(%s), gender=(%s), dob=(%s), address=(%s), pincode=(%s), qualification=(%s), occupation=(%s), fathers_name=(%s), medium=(%s)  where id=(%s)""", [whatsapp, graduation_year, course, gender, dob, address, pincode, qualification, occupation, fathers_name, medium, user_id])
+    cursor.execute("""UPDATE course_users SET whatsapp =(%s), graduation_year=(%s), course=(%s), gender=(%s), dob=(%s), address=(%s), pincode=(%s), qualification=(%s), occupation=(%s), fathers_name=(%s), medium=(%s), image_url =(%s)  where id=(%s)""", [whatsapp, graduation_year, course, gender, dob, address, pincode, qualification, occupation, fathers_name, medium,imageUrl, user_id])
     mysql.connection.commit()
     cursor.close()
     response =app.response_class(response=json.dumps({"message":"User Data Added Successfully"}),status= 200, mimetype='application/json')
@@ -338,6 +333,127 @@ def checkOrderDetails(user_id):
     if result:
         isValid = True
     response =app.response_class(response=json.dumps({"isValid":isValid}),status= 200, mimetype='application/json')
+    return response
+
+##### Admin End #####
+
+# Admin Login
+@app.route('/adminLogin', methods=["POST"])
+def adminLogin():
+    username = request.json["username"]
+    password = request.json["password"]
+    isAdminExist = False
+    cursor = mysql.connection.cursor()
+    cursor.execute(
+        """SELECT * FROM admin_table where username=(%s) AND password=(%s)""", [username, password])
+    admin_data = cursor.fetchone()
+    if admin_data:
+        isAdminExist = True
+    if isAdminExist:
+        response = app.response_class(response=json.dumps({"message": "Login Success", "isValid": True, "admin": admin_data}), status=200, mimetype='application/json')
+        return response
+    else:
+        response = app.response_class(response=json.dumps({"message": "Wrong Credential", "isValid": False}), status=200, mimetype='application/json')
+        return response
+
+#Admin Dashboard
+@app.route('/adminDashboard',methods=["GET"])
+def adminDashboard():
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" select count(*) as total from course_users""")
+    total = cursor.fetchone()
+    cursor.execute(""" select count(*) as total from course_users u join course_order_history o on u.id = o.user_id""")
+    paid = cursor.fetchone()
+    cursor.execute(""" select count(*) as total from course_users where course = 1""")
+    prelims = cursor.fetchone()
+    cursor.execute(""" select count(*) as total from course_users where course = 2""")
+    mains = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Users data are:", "total_user":total["total"], "paid_user": paid['total'], "prelims":prelims["total"], "mains":mains["total"] }),status= 200, mimetype='application/json')
+    return response
+
+#All Users
+@app.route('/allUsers',methods=["GET"])
+def getAllUsers():
+    page = request.headers.get("page")
+    offset = 20*(int(page)-1)
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" select * from course_users order by id desc limit 20 offset %s """,[offset])
+    result = cursor.fetchall()
+    cursor.execute(""" select count(*) as total from users""")
+    total = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Users data are", "user_data":result, "total": total['total']}),status= 200, mimetype='application/json')
+    return response
+
+
+#Paid Users
+@app.route('/paidUsers',methods=["GET"])
+def getPaidUsers():
+    page = request.headers.get("page")
+    offset = 20*(int(page)-1)
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" select u.*, o.* from course_users u join course_order_history o on u.id = o.user_id order by u.id desc limit 20 offset %s""", [offset])
+    result = cursor.fetchall()
+    cursor.execute(""" select count(*) as total from course_users u join course_order_history o on u.id = o.user_id""")
+    total = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Users data are", "user_data":result, "total": total['total']}),status= 200, mimetype='application/json')
+    return response
+
+#Unpaid Users
+@app.route('/unpaidUsers',methods=["GET"])
+def getUnpaidUsers():
+    page = request.headers.get("page")
+    offset = 20*(int(page)-1)
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" select course_users.* from course_users left outer join course_order_history on course_users.id = course_order_history.user_id where course_order_history.user_id is null order by course_users.id desc limit 20 offset %s""", [offset])
+    result = cursor.fetchall()
+    cursor.execute(""" select count(*) as total from course_users left outer join course_order_history on course_users.id = course_order_history.user_id where course_order_history.user_id is null""")
+    total = cursor.fetchone()
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Users data are", "user_data":result, "total": total['total']}),status= 200, mimetype='application/json')
+    return response
+
+#Disputed Users
+@app.route('/disputeOrders',methods=["GET"])
+def disputeOrders():
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" select cu.firstname, cu.lastname, cu.email, coi.user_id, coi.id, coi.order_id, coi.package_id, coi.price, coi.initiate_at from course_order_initiates coi left join course_users cu on coi.user_id = cu.id where status is null order by coi.id desc""")
+    result = cursor.fetchall()
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Users data are", "order_data":result}),status= 200, mimetype='application/json')
+    return response
+
+# Resolve Orders
+@app.route('/resolveOrder',methods=["POST"])
+def resolveOrder():
+    payment_id = request.json["payment_id"]
+    initiate_id = request.json["initiate_id"]
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" select * from course_order_initiates where id =(%s)""",[initiate_id])
+    result = cursor.fetchone()
+    cursor.execute(""" update course_order_initiates set status='success' where id =(%s)""",[initiate_id])
+    cursor.execute(""" insert into course_order_history(payment_id, order_id, user_id, price, order_at, package_id, status) values(%s,%s,%s,%s,%s,%s,%s)""",[payment_id,result["order_id"],result["user_id"],result["price"],result["initiate_at"],result["package_id"],"success"])
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Successfully Resolved", "isValid":True}),status= 200, mimetype='application/json')
+    return response
+
+# Resolve Orders
+@app.route('/deleteDisputeOrder',methods=["DELETE"])
+def deleteDisputeOrder():
+    initiate_id = request.json["initiate_id"]
+    cursor = mysql.connection.cursor()
+    cursor.execute(""" delete from course_order_initiates where id =(%s)""",[initiate_id])
+    mysql.connection.commit()
+    cursor.close()
+    response =app.response_class(response=json.dumps({"message":"Successfully Deleted", "isValid":True}),status= 200, mimetype='application/json')
     return response
 
 if __name__ == "__main__":
